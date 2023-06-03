@@ -3,6 +3,7 @@
 /**
  * Module dependencies.
  */
+const chalk = require("chalk")
 
 var app = require('../app');
 var debug = require('debug')('nodejs-project:server');
@@ -86,6 +87,6 @@ function onListening() {
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
-    console.log('Listening on ' + bind);
+    console.log('Listening on ' + chalk.bgGreen.bold(bind));
   debug('Listening on ' + bind);
 }
