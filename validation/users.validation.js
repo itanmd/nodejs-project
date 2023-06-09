@@ -13,31 +13,28 @@ const passwordRole = {
     )
     .required(),
 };
-
 const firstnameRole = {
   firstname: Joi.string().min(2).max(255).alphanum().trim().required(),
 };
-
 const lastnameRole = {
   lastname: Joi.string().min(2).max(255).alphanum().trim().required(),
 };
-
 const phoneRole = {
-    phone: Joi.string().min(3).max(255).trim(),
-}
+  phone: Joi.string().min(3).max(255).trim(),
+};
 
 const signupSchema = Joi.object({
-    ...emailRole,
-    ...passwordRole,
-    ...firstnameRole,
-    ...lastnameRole,
-    ...phoneRole,
+  ...emailRole,
+  ...passwordRole,
+  ...firstnameRole,
+  ...lastnameRole,
+  ...phoneRole,
 });
 
 const validateSignupSchema = (data) => {
-    return signupSchema.validateAsync(data, {abortEarly: false})
+  return signupSchema.validateAsync(data, { abortEarly: false });
 };
 
 module.exports = {
-    validateSignupSchema,
-}
+  validateSignupSchema,
+};
