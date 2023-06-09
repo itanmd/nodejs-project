@@ -11,7 +11,7 @@ router.post("/signup", async (req, res) => {
     console.log("validatedValue", validatedValue);
     const usersData = await usersModule.selectUserByEmail(validatedValue.email);
     if (usersData.length > 0) {
-      throw new CustomResponse("failed", "email already exist");
+      throw new CustomResponse(CustomResponse.STATUSES.fail, "email already exist");
     }
     const hashedPassword = await bcrypt.createHash(validatedValue.password);
     const newUserData = await usersModule.insertUser(
@@ -21,7 +21,7 @@ router.post("/signup", async (req, res) => {
       hashedPassword,
       validatedValue.phone
     );
-    res.json(new CustomResponse("ok", "user created"))
+    res.json(new CustomResponse(CustomResponse.STATUSES.success, "user created"))
     res.json(usersData);
   } catch (err) {
     console.log("err", err);
@@ -46,14 +46,14 @@ router.post("/login", async (req, res) => {
     const validatedValue = await usersValidation.validateLoginSchema(req.body);
     const usersData = await usersModule.selectUserByEmail(validatedValue.email);
     if (usersData.length <= 0) {
-      throw {status: "failed", msg: "invalid email or password"};
+      throw CustomResponse(CustomResponse.STATUSES.fail, "invalid email or password");
     }
     const hashRes = await bcrypt.cmpHash(
       validatedValue.password,
       usersData[0].password
     );
     if (!hashRes) {
-      throw {status: "failed", msg: "invalid email or password"};
+      throw CustomResponse(CustomResponse.STATUSES.fail, "invalid email or password");
     }
   } catch (err) {
     res.json(err)
