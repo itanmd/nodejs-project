@@ -26,6 +26,12 @@ const insertUser = (firstname, lastname, email, password, phone) => {
   return user.save();
 };
 
+
+const selectUserByEmail = (email) => {
+    return Users.find( {email })
+}
+
 module.exports = {
   insertUser,
+  selectUserByEmail,
 };
