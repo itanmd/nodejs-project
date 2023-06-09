@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const usersModule = require("../../models/users.model");
 const usersValidation = require("../../validation/users.validation");
+const bcrypt = require("../../config/bcrypt")
 
 router.post("/signup", async (req, res) => {
   try {
@@ -11,6 +12,15 @@ router.post("/signup", async (req, res) => {
     if (usersData.length > 0) {
       throw { status: "failed", msg: "email already exist" };
     }
+    const hashedPassword = await bcrypt.createHash(validatedValue.password);
+    const newUserData = await usersModule.insertUser(
+      validatedValue.firstname,
+      validatedValue.lastname,
+      validatedValue.email,
+      hashedPassword,
+      validatedValue.phone
+    );
+    res.json({status: "ok", msg: "user created"})
     res.json(usersData);
   } catch (err) {
     console.log("err", err);
