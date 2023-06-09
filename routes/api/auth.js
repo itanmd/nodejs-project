@@ -3,7 +3,8 @@ const router = express.Router();
 const usersModule = require("../../models/users.model");
 const usersValidation = require("../../validation/users.validation");
 const bcrypt = require("../../config/bcrypt");
-const CustomResponse = require("../../classes/CustomResponse")
+const CustomResponse = require("../../classes/CustomResponse");
+const jwt = require("../../config/jwt")
 
 router.post("/signup", async (req, res) => {
   try {
@@ -46,15 +47,17 @@ router.post("/login", async (req, res) => {
     const validatedValue = await usersValidation.validateLoginSchema(req.body);
     const usersData = await usersModule.selectUserByEmail(validatedValue.email);
     if (usersData.length <= 0) {
-      throw CustomResponse(CustomResponse.STATUSES.fail, "invalid email or password");
+      throw new CustomResponse(CustomResponse.STATUSES.fail, "invalid email or password");
     }
     const hashRes = await bcrypt.cmpHash(
       validatedValue.password,
       usersData[0].password
     );
     if (!hashRes) {
-      throw CustomResponse(CustomResponse.STATUSES.fail, "invalid email or password");
+      throw new CustomResponse(CustomResponse.STATUSES.fail, "invalid email or password");
     }
+    let token = await jwt.generateToken({ email: usersData[0].email});
+    res.json(new CustomResponse(CustomResponse.STATUSES.success, token));
   } catch (err) {
     res.json(err)
   }
