@@ -4,7 +4,8 @@ const usersModule = require("../../models/users.model");
 const usersValidation = require("../../validation/users.validation");
 const bcrypt = require("../../config/bcrypt");
 const CustomResponse = require("../../classes/CustomResponse");
-const jwt = require("../../config/jwt")
+const jwt = require("../../config/jwt");
+const generateRandomAlphaNumString = require("../../util/randomAlphaNum");
 
 router.post("/signup", async (req, res) => {
   try {
@@ -12,7 +13,10 @@ router.post("/signup", async (req, res) => {
     console.log("validatedValue", validatedValue);
     const usersData = await usersModule.selectUserByEmail(validatedValue.email);
     if (usersData.length > 0) {
-      throw new CustomResponse(CustomResponse.STATUSES.fail, "email already exist");
+      throw new CustomResponse(
+        CustomResponse.STATUSES.fail,
+        "email already exist"
+      );
     }
     const hashedPassword = await bcrypt.createHash(validatedValue.password);
     const newUserData = await usersModule.insertUser(
@@ -22,7 +26,9 @@ router.post("/signup", async (req, res) => {
       hashedPassword,
       validatedValue.phone
     );
-    res.json(new CustomResponse(CustomResponse.STATUSES.success, "user created"))
+    res.json(
+      new CustomResponse(CustomResponse.STATUSES.success, "user created")
+    );
     res.json(usersData);
   } catch (err) {
     console.log("err", err);
@@ -47,19 +53,47 @@ router.post("/login", async (req, res) => {
     const validatedValue = await usersValidation.validateLoginSchema(req.body);
     const usersData = await usersModule.selectUserByEmail(validatedValue.email);
     if (usersData.length <= 0) {
-      throw new CustomResponse(CustomResponse.STATUSES.fail, "invalid email or password");
+      throw new CustomResponse(
+        CustomResponse.STATUSES.fail,
+        "invalid email or password"
+      );
     }
     const hashRes = await bcrypt.cmpHash(
       validatedValue.password,
       usersData[0].password
     );
     if (!hashRes) {
-      throw new CustomResponse(CustomResponse.STATUSES.fail, "invalid email or password");
+      throw new CustomResponse(
+        CustomResponse.STATUSES.fail,
+        "invalid email or password"
+      );
     }
-    let token = await jwt.generateToken({ email: usersData[0].email});
+    let token = await jwt.generateToken({ email: usersData[0].email });
     res.json(new CustomResponse(CustomResponse.STATUSES.success, token));
   } catch (err) {
-    res.json(err)
+    res.json(err);
+  }
+});
+
+router.post("/forgetpassword", async (req, res) => {
+  try {
+    const validatedValue = await usersValidation.validateForgetPasswordSchema(
+      req.body
+    );
+    const usersData = await usersModule.selectUserByEmail(validatedValue.email);
+    if (usersData.length <= 0) {
+      throw new CustomResponse(
+        CustomResponse.STATUSES.success,
+        "if the email exists, the mail was sent"
+      );
+    }
+    const secretKey = generateRandomAlphaNumString(4);
+    const urlSecretKey = `http://localhost:${process.env.PORT}/api/recoverpassword/${secretKey}`;
+    //30 min * 60 sec * 1000 ms = 1800000 ms
+    const expDate = new Date(Date.now() + 1800000);
+    await usersModule.updateRecovery(validatedValue.email, secretKey, expDate);
+  } catch (err) {
+    res.json(err);
   }
 });
 
